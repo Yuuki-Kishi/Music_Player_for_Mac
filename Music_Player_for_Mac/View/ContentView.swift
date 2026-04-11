@@ -28,7 +28,7 @@ struct ContentView: View {
                 case .readFolderView:
                     ReadFolderView(readFolderDataStore: readFolderDataStore)
                 case .equalizerView:
-                    EmptyView()
+                    EqualizerView()
                 }
             }
             .onAppear() {
@@ -40,9 +40,9 @@ struct ContentView: View {
             if !FileService.createDirectoryInDocumentDirectory(folderPath: "Playlist") { print("Failed create Playlist directory") }
             if !FileService.createDirectoryInDocumentDirectory(folderPath: "System") { print("Failed create System directory") }
             if !FileService.isExistFileInDocumentDirectory(filePath: "System/ReadFolder.csv") {
-                if !CSVService.createReadFolderCSVData() { print("Failed create ReadFolder.csv") }
+                if !ReadFolderRepository.createReadFolderCSVData() { print("Failed create ReadFolder.csv") }
             }
-            readFolderDataStore.readFolderList = CSVService.getReadFolderCSVData()
+            readFolderDataStore.readFolderList = ReadFolderRepository.getReadFolderCSVData()
         }
 }
 

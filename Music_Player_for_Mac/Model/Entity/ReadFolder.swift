@@ -13,20 +13,17 @@ struct ReadFolder: Hashable, Identifiable, Equatable {
 //    }
     
     var id = UUID()
-    var folderTitle: String
     var isRead: Bool
     var folderPath: String
     var bookmarkData: Data
     
-    init(folderTitle: String, isRead: Bool, folderPath: String, bookmarkData: Data) {
-        self.folderTitle = folderTitle
+    init(isRead: Bool, folderPath: String, bookmarkData: Data) {
         self.isRead = isRead
         self.folderPath = folderPath
         self.bookmarkData = bookmarkData
     }
     
     init() {
-        self.folderTitle = "unknownFolder"
         self.isRead = true
         self.folderPath = "unknownFolderPath"
         self.bookmarkData = Data()
@@ -53,6 +50,11 @@ extension Array where Element == ReadFolder {
             self[index] = item
         } else {
             self.append(item)
+        }
+    }
+    mutating func remove(readFolder: Element) {
+        if let index = self.firstIndex(where: { $0.folderPath == readFolder.folderPath }) {
+            self.remove(at: index)
         }
     }
 }

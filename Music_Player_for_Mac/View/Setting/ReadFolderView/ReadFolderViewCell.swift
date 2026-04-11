@@ -12,22 +12,19 @@ struct ReadFolderViewCell: View {
     @State var column: ColumnEnum
     
     enum ColumnEnum {
-        case folderTitle, containMusicCount, isRead, folderPath, removeButton
+        case isRead, musicCount, folderPath, removeButton
     }
     
     var body: some View {
         switch column {
-        case .folderTitle:
-            Text(readFolder.folderTitle)
-                .lineLimit(1)
-                .foregroundStyle(.primary)
-        case .containMusicCount:
-            Text(String(readFolder.containMusicCount) + "曲")
-                .lineLimit(1)
-                .foregroundStyle(.secondary)
         case .isRead:
             Toggle("", isOn: $readFolder.isRead)
                 .labelsHidden()
+                .frame(maxWidth: .infinity, alignment: .center)
+        case .musicCount:
+            Text(musicCount())
+                .lineLimit(1)
+                .foregroundStyle(.primary)
         case .folderPath:
             Text(readFolder.folderPath)
                 .lineLimit(1)
@@ -35,18 +32,21 @@ struct ReadFolderViewCell: View {
                 .truncationMode(.head)
         case .removeButton:
             Button(action: {
-                
+                if !ReadFolderRepository.deleteReadFolder(readFolder: readFolder) { print("Failed to delete") }
             }, label: {
                 Image(systemName: "trash")
                     .foregroundStyle(.red)
                     .padding(5)
-                    .background(RoundedRectangle(cornerRadius: 5).foregroundStyle(Color("SelectedGray")))
             })
             .buttonStyle(.borderless)
         }
     }
+    func musicCount() -> String {
+        let musicCount = FileService.getFileCount(readFolder: readFolder)
+        return String(musicCount) + "曲"
+    }
 }
 
 #Preview {
-    ReadFolderViewCell(readFolder: Binding(get: { ReadFolder() }, set: {_ in}), column: .folderTitle)
+    ReadFolderViewCell(readFolder: Binding(get: { ReadFolder() }, set: {_ in}), column: .folderPath)
 }

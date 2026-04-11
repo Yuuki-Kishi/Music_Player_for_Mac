@@ -38,26 +38,28 @@ struct MusicView: View {
         }
         .frame(minWidth: 250)
         .contextMenu(forSelectionType: Music.ID.self, menu: { _ in }) { musics in
-            print(selection)
-            print(musics.first)
             guard let music = musicDataStore.musicList.first(where: { $0.id == musics.first }) else { return }
             playDataStore.musicChoosed(music: music, playGroup: .music)
+        }
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button(action: { loadMusics() }) {
+                    Image(systemName: "document.viewfinder")
+                }
+            }
         }
         .navigationTitle("ミュージック")
         .onAppear() {
             selection = []
-            Task { await loadMusics() }
+            loadMusics()
         }
     }
-    func loadMusics() async {
-        for readFolder in readFolderDataStore.readFolderList {
-            let musicFilePaths = FileService.getAllFilePaths(readFolder: readFolder)
-            for musicFilePath in musicFilePaths {
-                guard let music = await FileService.getFileMetadataInReadFolder(filePath: musicFilePath, readFolder: readFolder) else { continue }
-                musicDataStore.musicList.append(noDuplicate: music)
-            }
+    func loadMusics() {
+        Task {
+            musicDataStore.musicList.removeAll()
+            await MusicRepository.loadMusics()
+            musicDataStore.musicList.sort { $0.musicName < $1.musicName }
         }
-        musicDataStore.musicList.sort { $0.musicName < $1.musicName }
     }
 }
 

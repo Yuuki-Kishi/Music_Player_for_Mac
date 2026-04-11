@@ -41,10 +41,10 @@ class PlayDataStore: ObservableObject {
         audioEngine.attach(equalizerNode)
         audioEngine.connect(playerNode, to: equalizerNode, format: nil)
         audioEngine.connect(equalizerNode, to: audioEngine.mainMixerNode, format: nil)
-//        Task {
-//            let equalizerParameters = await EqualizerParameterRepository.read()
-//            setEqualizer(equalizerParameters: equalizerParameters)
-//        }
+        Task {
+            let equalizerParameters = await EqualizerParameterRepository.read()
+            setEqualizer(equalizerParameters: equalizerParameters)
+        }
 //        loadNextMusic()
 //        playMode = UserDefaultsRepository.loadPlayMode()
 //        notificationRepository.initRemoteCommand()
@@ -52,27 +52,27 @@ class PlayDataStore: ObservableObject {
         stop()
     }
     
-//    func setEqualizer(equalizerParameters: [EqualizerParameter]) {
-//        equalizerNode.bypass = !equalizerToggle
-//        if equalizerParameters.isEmpty {
-//            let frequencys: [Float] = [32.0, 64.0, 128.0, 256.0, 500.0, 1000.0, 2000.0, 4000.0, 8000.0, 16000.0]
-//            self.equalizerNode.bands.enumerated().forEach { index, param in
-//                param.filterType = .parametric
-//                param.bypass = !equalizerToggle
-//                param.bandwidth = 1
-//                param.frequency = frequencys[index]
-//                param.gain = 0.0
-//            }
-//        } else {
-//            self.equalizerNode.bands.enumerated().forEach { index, param in
-//                param.filterType = .parametric
-//                param.bypass = !equalizerToggle
-//                param.bandwidth = equalizerParameters[index].bandWidth
-//                param.frequency = equalizerParameters[index].frequency
-//                param.gain = equalizerParameters[index].gain
-//            }
-//        }
-//    }
+    func setEqualizer(equalizerParameters: [EqualizerParameter]) {
+        equalizerNode.bypass = !equalizerToggle
+        if equalizerParameters.isEmpty {
+            let frequencys: [Float] = [32.0, 64.0, 128.0, 256.0, 500.0, 1000.0, 2000.0, 4000.0, 8000.0, 16000.0]
+            self.equalizerNode.bands.enumerated().forEach { index, param in
+                param.filterType = .parametric
+                param.bypass = !equalizerToggle
+                param.bandwidth = 1
+                param.frequency = frequencys[index]
+                param.gain = 0.0
+            }
+        } else {
+            self.equalizerNode.bands.enumerated().forEach { index, param in
+                param.filterType = .parametric
+                param.bypass = !equalizerToggle
+                param.bandwidth = equalizerParameters[index].bandWidth
+                param.frequency = equalizerParameters[index].frequency
+                param.gain = equalizerParameters[index].gain
+            }
+        }
+    }
     
     func setMusic(music: Music) {
         self.playingMusic = music

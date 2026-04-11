@@ -13,4 +13,5 @@ class ReadFolderDataStore: ObservableObject {
     static let shared = ReadFolderDataStore()
     
     @Published var readFolderList: [ReadFolder] = []
+    @Published var dispatchSource: DispatchSourceFileSystemObject? = nil
 }

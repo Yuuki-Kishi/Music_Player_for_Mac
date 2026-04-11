@@ -23,17 +23,14 @@ struct ReadFolderView: View {
                 .padding()
             }
             Table($readFolderDataStore.readFolderList) {
-                TableColumn("フォルダ名") { readFolder in
-                    ReadFolderViewCell(readFolder: readFolder, column: .folderTitle)
-                }
-                TableColumn("曲数") { readFolder in
-                    ReadFolderViewCell(readFolder: readFolder, column: .containMusicCount)
-                }
-                .width(60)
                 TableColumn("読み込み") { readFolder in
                     ReadFolderViewCell(readFolder: readFolder, column: .isRead)
                 }
-                .width(60)
+                .width(50)
+                TableColumn("読み込み") { readFolder in
+                    ReadFolderViewCell(readFolder: readFolder, column: .musicCount)
+                }
+                .width(70)
                 TableColumn("フォルダパス") { readFolder in
                     ReadFolderViewCell(readFolder: readFolder, column: .folderPath)
                 }
@@ -49,7 +46,10 @@ struct ReadFolderView: View {
         let panel = selectFolderPanel()
         if panel.runModal() == .OK {
             do {
-                
+                guard let folderURL = panel.url else { return }
+                let bookmarkData = try folderURL.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
+                let readFolder = ReadFolder(isRead: true, folderPath: folderURL.planePath, bookmarkData: bookmarkData)
+                if !ReadFolderRepository.addReadFolder(readFolder: readFolder) { print("Failed Save ReadFolder to CSV") }
             } catch {
                 print(error)
             }

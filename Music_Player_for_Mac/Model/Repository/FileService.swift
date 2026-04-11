@@ -8,6 +8,7 @@
 import Foundation
 import AVFoundation
 
+@MainActor
 class FileService {
     static let fileManager = FileManager.default
     static let documentDirectory: URL? = { fileManager.urls(for: .documentDirectory, in: .userDomainMask).first }()
@@ -45,29 +46,6 @@ class FileService {
 //    }
     
     //get
-//    static func getFilePaths(folderPath: String) -> [String] {
-//        let folderURL = URL(fileURLWithPath: folderPath)
-//        var filePaths: [String] = []
-//        do {
-//            let bookmarkDataURL = try URL(resolvingBookmarkData: <#T##Data#>, bookmarkDataIsStale: &<#T##Bool#>)
-//            guard folderURL.startAccessingSecurityScopedResource() else {
-//                print("Failed to access the directory")
-//                return []
-//            }
-//            defer { folderURL.stopAccessingSecurityScopedResource() }
-//            let fileURLs = try fileManager.contentsOfDirectory(at: folderURL, includingPropertiesForKeys: nil)
-//            print(fileURLs)
-//            for fileURL in fileURLs {
-//                if fileURL.planePath.contains("/.Trash/") || fileURL.planePath.contains("/Playlist/") { continue }
-//                let path = fileURL.planePath.replacingOccurrences(of: folderURL.planePath, with: "")
-//                let filePath = path.replacingOccurrences(of: "/private", with: "")
-//                filePaths.append(filePath)
-//            }
-//        } catch {
-//            print(error)
-//        }
-//        return filePaths
-//    }
     
 //    static func getPlaylistFilePaths() -> [String] {
 //        guard let folderURL = documentDirectory?.appendingPathComponent("Playlist") else { return [] }
@@ -113,45 +91,17 @@ class FileService {
         }
     }
     
-    static func getFileMetadataInReadFolder(filePath: String, readFolder: ReadFolder) async -> Music? {
+    static func getFileAttributes(filePath: String) -> [FileAttributeKey : Any]? {
         do {
-            guard let bookmarkDataURL = readFolder.bookmarkDataURL else { return nil }
-            let fileURL = bookmarkDataURL.appending(path: filePath)
-            guard bookmarkDataURL.startAccessingSecurityScopedResource() else { return nil }
-            defer { bookmarkDataURL.stopAccessingSecurityScopedResource() }
-            let asset = AVURLAsset(url: fileURL)
-            guard let metadata = try? await asset.load(.commonMetadata) else { return nil }
-            let musicName = try? await metadata.first(where: { $0.commonKey == .commonKeyTitle })?.load(.stringValue)
-            let artistName = try? await metadata.first(where: { $0.commonKey == .commonKeyArtist })?.load(.stringValue)
-            let albumName = try? await metadata.first(where: { $0.commonKey == .commonKeyAlbumName })?.load(.stringValue)
-            let coverImage = try? await metadata.first(where: { $0.commonKey == .commonKeyArtwork })?.load(.dataValue)
-            let folderPath = URL(filePath: filePath).deletingLastPathComponent().planePath
-            let bcf = ByteCountFormatter()
-            bcf.allowedUnits = [.useAll]
-            bcf.countStyle = .file
-            let attributes: [FileAttributeKey: Any] = try fileManager.attributesOfItem(atPath: fileURL.planePath)
-            guard let editedDate = attributes[FileAttributeKey.modificationDate] as? Date else { return nil }
-            guard let bytes = attributes[.size] as? Int64 else { return nil }
-            let fileSize = bcf.string(fromByteCount: bytes)
-            let musicLength = try await CMTimeGetSeconds(asset.load(.duration))
-            let music = Music(musicName: musicName, artistName: artistName, albumName: albumName, coverImage: coverImage, editedDate: editedDate, fileSize: fileSize, musicLength: musicLength, parentFolderPath: folderPath, readFolder: readFolder, filePath: filePath)
-            return music
+            return try fileManager.attributesOfItem(atPath: filePath)
         } catch {
             print(error)
             return nil
         }
     }
     
-    static func getFileCount(folderURL: URL) -> Int {
-        let fileURLs = fileManager.enumerator(at: folderURL, includingPropertiesForKeys: [])
-        var containMusicCount: Int = 0
-        while let fileURL = fileURLs?.nextObject() as? URL {
-            if !fileURL.isMusicFile { continue }
-            let resourceValues = try? fileURL.resourceValues(forKeys: [.isDirectoryKey])
-            if resourceValues?.isDirectory == true { continue }
-            containMusicCount += 1
-        }
-        return containMusicCount
+    static func getFileCount(readFolder: ReadFolder) -> Int {
+        getAllFilePaths(readFolder: readFolder).count
     }
     
 //    static func getFolderPath(filePath: String) -> String {

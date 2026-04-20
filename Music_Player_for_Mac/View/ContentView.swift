@@ -39,10 +39,10 @@ struct ContentView: View {
             print("rootFolderPath:", FileService.documentDirectory?.path() ?? "nil")
             if !FileService.createDirectoryInDocumentDirectory(folderPath: "Playlist") { print("Failed create Playlist directory") }
             if !FileService.createDirectoryInDocumentDirectory(folderPath: "System") { print("Failed create System directory") }
-            if !FileService.isExistFileInDocumentDirectory(filePath: "System/ReadFolder.csv") {
-                if !ReadFolderRepository.createReadFolderCSVData() { print("Failed create ReadFolder.csv") }
+            if !ReadFolderRepository.isExistReadFolderJson() {
+                if !ReadFolderRepository.createReadFolderJson() { print("Failed create ReadFolder.json") }
             }
-            readFolderDataStore.readFolderList = ReadFolderRepository.getReadFolderCSVData()
+            readFolderDataStore.readFolderList = ReadFolderRepository.getReadFolder()
         }
 }
 

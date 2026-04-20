@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct ReadFolder: Hashable, Identifiable, Equatable {
+struct ReadFolder: Codable, Hashable, Identifiable, Equatable {
 //    static func == (lhs: ReadFolder, rhs: ReadFolder) -> Bool {
 //        lhs.folderPath == rhs.folderPath
 //    }
@@ -16,6 +16,24 @@ struct ReadFolder: Hashable, Identifiable, Equatable {
     var isRead: Bool
     var folderPath: String
     var bookmarkData: Data
+    
+    enum CodingKeys: CodingKey {
+        case isRead, folderPath, bookmarkData
+    }
+    
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.isRead = try container.decode(Bool.self, forKey: .isRead)
+        self.folderPath = try container.decode(String.self, forKey: .folderPath)
+        self.bookmarkData = try container.decode(Data.self, forKey: .bookmarkData)
+    }
+    
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(isRead, forKey: .isRead)
+        try container.encode(folderPath, forKey: .folderPath)
+        try container.encode(bookmarkData, forKey: .bookmarkData)
+    }
     
     init(isRead: Bool, folderPath: String, bookmarkData: Data) {
         self.isRead = isRead

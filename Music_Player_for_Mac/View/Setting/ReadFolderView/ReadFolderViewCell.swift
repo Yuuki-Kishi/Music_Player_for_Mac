@@ -32,7 +32,8 @@ struct ReadFolderViewCell: View {
                 .truncationMode(.head)
         case .removeButton:
             Button(action: {
-                if !ReadFolderRepository.deleteReadFolder(readFolder: readFolder) { print("Failed to delete") }
+                guard ReadFolderRepository.deleteReadFolder(readFolder: readFolder) else { return }
+                print("Sucess")
             }, label: {
                 Image(systemName: "trash")
                     .foregroundStyle(.red)

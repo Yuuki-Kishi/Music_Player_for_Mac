@@ -10,32 +10,30 @@ import SwiftCSV
 
 @MainActor
 class ReadFolderRepository {
-    static let readFolderCSVFilePath: String = "System/ReadFolder.csv"
+    static let readFolderCSVFilePath: String = "System/ReadFolder.json"
     static let readFolderDataStore: ReadFolderDataStore = .shared
     
     //create
-    static func createReadFolderCSVData() -> Bool {
-        let header: [String] = ["isRead", "folderPath", "bookmarkData"]
-        let containData = header.joined(separator: ",") + "\n"
-        return FileService.createFileInDocumentDirectory(filePath: readFolderCSVFilePath, content: containData)
+    static func createReadFolderJson() -> Bool {
+        do {
+            let emptyData: [ReadFolder] = []
+            let content = try JSONEncoder().encode(emptyData)
+            return FileService.createFileInDocumentDirectory(filePath: readFolderCSVFilePath, content: content)
+        } catch {
+            return false
+        }
+    }
+    
+    //check
+    static func isExistReadFolderJson() -> Bool {
+        return FileService.isExistFileInDocumentDirectory(filePath: readFolderCSVFilePath)
     }
     
     //get
-    static func getReadFolderCSVData() -> [ReadFolder] {
+    static func getReadFolder() -> [ReadFolder] {
         do {
-            guard let csvURL = FileService.documentDirectory?.appending(path: readFolderCSVFilePath) else { return [] }
-            let csvData = try CSV<Named>(url: csvURL)
-            var readFolderList: [ReadFolder] = []
-            for row in csvData.rows {
-                guard let isReadString = row["isRead"] else { continue }
-                guard let isRead = Bool(isReadString.lowercased()) else { continue }
-                guard let folderPath = row["folderPath"] else { continue }
-                guard let bookmarkDataString = row["bookmarkData"] else { continue }
-                guard let bookmarkData = Data(base64Encoded: bookmarkDataString) else { continue }
-                let readFolder = ReadFolder(isRead: isRead, folderPath: folderPath, bookmarkData: bookmarkData)
-                readFolderList.append(noDuplicate: readFolder)
-            }
-            return readFolderList
+            guard let jsonData = try FileService.getFileData(filePath: readFolderCSVFilePath) else { return [] }
+            return try JSONDecoder().decode([ReadFolder].self, from: jsonData)
         } catch {
             print(error)
             return []
@@ -44,26 +42,31 @@ class ReadFolderRepository {
     
     //update
     static func addReadFolder(readFolder: ReadFolder) -> Bool {
-        let csvData: [String] = [readFolder.isRead.description.uppercased(), readFolder.folderPath, readFolder.bookmarkData.base64EncodedString()]
-        let csvString = csvData.joined(separator: ",") + "\n"
-        guard FileService.addRowToFile(filePath: readFolderCSVFilePath, content: csvString) else { return false }
-        readFolderDataStore.readFolderList.append(noDuplicate: readFolder)
-        return true
+        do {
+            var readFolders = getReadFolder()
+            readFolders.append(noDuplicate: readFolder)
+            let content = try JSONEncoder().encode(readFolders)
+            guard FileService.updateFileWithData(filePath: readFolderCSVFilePath, content: content) else { return false }
+            readFolderDataStore.readFolderList.append(noDuplicate: readFolder)
+            return true
+        } catch {
+            print(error)
+            return false
+        }
     }
     
     //delete
     static func deleteReadFolder(readFolder: ReadFolder) -> Bool {
-        var currentReadFolder = getReadFolderCSVData()
-        currentReadFolder.remove(readFolder: readFolder)
-        let header: [String] = ["isRead", "folderPath", "bookmarkData"]
-        var csvData: [String] = [header.joined(separator: ",")]
-        for readFolder in currentReadFolder {
-            let data: [String] = [readFolder.isRead.description.uppercased(), readFolder.folderPath, readFolder.bookmarkData.base64EncodedString()]
-            csvData.append(data.joined(separator: ","))
+        do {
+            var readFolders = getReadFolder()
+            readFolders.remove(readFolder: readFolder)
+            let content = try JSONEncoder().encode(readFolders)
+            guard FileService.updateFileWithData(filePath: readFolderCSVFilePath, content: content) else { return false }
+            readFolderDataStore.readFolderList.remove(readFolder: readFolder)
+            return true
+        } catch {
+            print(error)
+            return false
         }
-        let csvString = csvData.joined(separator: "\n") + "\n"
-        guard FileService.updateFileInDocumentDirectory(filePath: readFolderCSVFilePath, content: csvString) else { return false }
-        readFolderDataStore.readFolderList.remove(readFolder: readFolder)
-        return true
     }
 }

@@ -49,7 +49,8 @@ struct ReadFolderView: View {
                 guard let folderURL = panel.url else { return }
                 let bookmarkData = try folderURL.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
                 let readFolder = ReadFolder(isRead: true, folderPath: folderURL.planePath, bookmarkData: bookmarkData)
-                if !ReadFolderRepository.addReadFolder(readFolder: readFolder) { print("Failed Save ReadFolder to CSV") }
+                guard ReadFolderRepository.addReadFolder(readFolder: readFolder) else { return }
+                print("Success")
             } catch {
                 print(error)
             }

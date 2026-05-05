@@ -8,42 +8,50 @@
 import SwiftUI
 
 struct ContentView: View {
+    @StateObject var playDataStore: PlayDataStore = .shared
     @StateObject var viewDataStore: ViewDataStore = .shared
-        @StateObject var readFolderDataStore: ReadFolderDataStore = .shared
-        @State private var columnVisibility = NavigationSplitViewVisibility.doubleColumn
-
-        var body: some View {
-            NavigationSplitView(columnVisibility: $columnVisibility) {
-                SideBarView(viewDataStore: viewDataStore)
-            } detail: {
-                switch viewDataStore.selectedView {
-                case .musicView:
-                    MusicView(readFolderDataStore: readFolderDataStore)
-                case .artistView:
-                    EmptyView()
-                case .albumView:
-                    EmptyView()
-                case .folderView:
-                    EmptyView()
-                case .readFolderView:
-                    ReadFolderView(readFolderDataStore: readFolderDataStore)
-                case .equalizerView:
-                    EqualizerView()
-                }
-            }
-            .onAppear() {
-                onAppear()
+    @StateObject var readFolderDataStore: ReadFolderDataStore = .shared
+    @State private var columnVisibility = NavigationSplitViewVisibility.doubleColumn
+    
+    var body: some View {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
+            SideBarView(viewDataStore: viewDataStore)
+        } detail: {
+            switch viewDataStore.selectedView {
+            case .musicView:
+                MusicView(readFolderDataStore: readFolderDataStore, playDataStore: playDataStore)
+            case .artistView:
+                EmptyView()
+            case .albumView:
+                EmptyView()
+            case .folderView:
+                EmptyView()
+            case .readFolderView:
+                ReadFolderView(readFolderDataStore: readFolderDataStore)
+            case .equalizerView:
+                EqualizerView()
             }
         }
-        func onAppear() {
-            print("rootFolderPath:", FileService.documentDirectory?.path() ?? "nil")
-            if !FileService.createDirectoryInDocumentDirectory(folderPath: "Playlist") { print("Failed create Playlist directory") }
-            if !FileService.createDirectoryInDocumentDirectory(folderPath: "System") { print("Failed create System directory") }
-            if !ReadFolderRepository.isExistReadFolderJson() {
-                if !ReadFolderRepository.createReadFolderJson() { print("Failed create ReadFolder.json") }
-            }
-            readFolderDataStore.readFolderList = ReadFolderRepository.getReadFolder()
+        .onAppear() {
+            onAppear()
         }
+    }
+    func onAppear() {
+        print("rootFolderPath:", FileService.documentDirectory?.path() ?? "nil")
+        if !FileService.createDirectoryInDocumentDirectory(folderPath: "Playlist") { print("Failed create Playlist directory") }
+        if !FileService.createDirectoryInDocumentDirectory(folderPath: "System") { print("Failed create System directory") }
+        if !ReadFolderRepository.isExistReadFolderJson() {
+            if !ReadFolderRepository.createReadFolderJson() { print("Failed create ReadFolder.json") }
+        }
+        if !PlayFlowRepository.isExistPlayNextM3U8() {
+            if !PlayFlowRepository.createPlayNextM3U8() { print("Failed create PlayNext.m3u8") }
+        }
+        if !PlayFlowRepository.isExistPlayBackM3U8() {
+            if !PlayFlowRepository.createPlayBackM3U8() { print("Failed create PlayBack.m3u8") }
+        }
+        readFolderDataStore.readFolderList = ReadFolderRepository.getReadFolder()
+        PlayRepository.stop()
+    }
 }
 
 #Preview {

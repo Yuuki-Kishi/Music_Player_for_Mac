@@ -10,7 +10,7 @@ import SwiftCSV
 
 @MainActor
 class ReadFolderRepository {
-    static let readFolderCSVFilePath: String = "System/ReadFolder.json"
+    static let readFolderJSONFilePath: String = "System/ReadFolder.json"
     static let readFolderDataStore: ReadFolderDataStore = .shared
     
     //create
@@ -18,7 +18,7 @@ class ReadFolderRepository {
         do {
             let emptyData: [ReadFolder] = []
             let content = try JSONEncoder().encode(emptyData)
-            return FileService.createFileInDocumentDirectory(filePath: readFolderCSVFilePath, content: content)
+            return FileService.createFileWithData(filePath: readFolderJSONFilePath, content: content)
         } catch {
             return false
         }
@@ -26,13 +26,13 @@ class ReadFolderRepository {
     
     //check
     static func isExistReadFolderJson() -> Bool {
-        return FileService.isExistFileInDocumentDirectory(filePath: readFolderCSVFilePath)
+        FileService.isExistFileInDocumentDirectory(filePath: readFolderJSONFilePath)
     }
     
     //get
     static func getReadFolder() -> [ReadFolder] {
         do {
-            guard let jsonData = try FileService.getFileData(filePath: readFolderCSVFilePath) else { return [] }
+            guard let jsonData = try FileService.getFileData(filePath: readFolderJSONFilePath) else { return [] }
             return try JSONDecoder().decode([ReadFolder].self, from: jsonData)
         } catch {
             print(error)
@@ -46,7 +46,7 @@ class ReadFolderRepository {
             var readFolders = getReadFolder()
             readFolders.append(noDuplicate: readFolder)
             let content = try JSONEncoder().encode(readFolders)
-            guard FileService.updateFileWithData(filePath: readFolderCSVFilePath, content: content) else { return false }
+            guard FileService.updateFileWithData(filePath: readFolderJSONFilePath, content: content) else { return false }
             readFolderDataStore.readFolderList.append(noDuplicate: readFolder)
             return true
         } catch {
@@ -61,7 +61,7 @@ class ReadFolderRepository {
             var readFolders = getReadFolder()
             readFolders.remove(readFolder: readFolder)
             let content = try JSONEncoder().encode(readFolders)
-            guard FileService.updateFileWithData(filePath: readFolderCSVFilePath, content: content) else { return false }
+            guard FileService.updateFileWithData(filePath: readFolderJSONFilePath, content: content) else { return false }
             readFolderDataStore.readFolderList.remove(readFolder: readFolder)
             return true
         } catch {

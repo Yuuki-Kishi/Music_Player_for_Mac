@@ -10,36 +10,43 @@ import SwiftUI
 struct MusicView: View {
     @StateObject var musicDataStore: MusicDataStore = .shared
     @ObservedObject var readFolderDataStore: ReadFolderDataStore
-    @StateObject var playDataStore: PlayDataStore = .shared
+    @ObservedObject var playDataStore: PlayDataStore
     @State var selection: Set<Music.ID> = []
     
     var body: some View {
-        Table(musicDataStore.musicList, selection: $selection) {
-            TableColumn("タイトル") { music in
-                MusicViewCell(music: music, column: .musicName)
+        VStack {
+            Table(musicDataStore.musicList, selection: $selection) {
+                TableColumn("タイトル") { music in
+                    MusicViewCell(music: music, column: .musicName)
+                }
+                .width(min: 30, max: .infinity)
+                TableColumn("時間") { music in
+                    MusicViewCell(music: music, column: .musicLength)
+                }
+                .width(60)
+                TableColumn("アーティスト") { music in
+                    MusicViewCell(music: music, column: .artistName)
+                }
+                .width(min: 30, max: .infinity)
+                TableColumn("アルバム") { music in
+                    MusicViewCell(music: music, column: .albumName)
+                }
+                .width(min: 30, max: .infinity)
+                TableColumn("更新日時") { music in
+                    MusicViewCell(music: music, column: .editedDate)
+                }
+                .width(150)
             }
-            .width(min: 30, max: .infinity)
-            TableColumn("時間") { music in
-                MusicViewCell(music: music, column: .musicLength)
+            .frame(minWidth: 250)
+            .contextMenu(forSelectionType: Music.ID.self, menu: { _ in }) { musics in
+                guard let music = musicDataStore.musicList.first(where: { $0.id == musics.first }) else { return }
+                PlayRepository.musicChoosed(music: music, playGroup: .music)
+                let filePaths = musicDataStore.musicList.compactMap { $0.fullPath }
+                PlayRepository.setNextMusics(fullPaths: filePaths)
             }
-            .width(60)
-            TableColumn("アーティスト") { music in
-                MusicViewCell(music: music, column: .artistName)
-            }
-            .width(min: 30, max: .infinity)
-            TableColumn("アルバム") { music in
-                MusicViewCell(music: music, column: .albumName)
-            }
-            .width(min: 30, max: .infinity)
-            TableColumn("更新日時") { music in
-                MusicViewCell(music: music, column: .editedDate)
-            }
-            .width(150)
-        }
-        .frame(minWidth: 250)
-        .contextMenu(forSelectionType: Music.ID.self, menu: { _ in }) { musics in
-            guard let music = musicDataStore.musicList.first(where: { $0.id == musics.first }) else { return }
-            playDataStore.musicChoosed(music: music, playGroup: .music)
+            PlayInfoView(playDataStore: playDataStore)
+                .padding(.horizontal, 10)
+                .padding(.bottom, 5)
         }
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
@@ -64,5 +71,5 @@ struct MusicView: View {
 }
 
 #Preview {
-    MusicView(readFolderDataStore: .shared)
+    MusicView(readFolderDataStore: .shared, playDataStore: .shared)
 }

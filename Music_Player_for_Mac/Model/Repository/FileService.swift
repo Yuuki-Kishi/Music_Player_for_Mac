@@ -14,9 +14,15 @@ class FileService {
     static let documentDirectory: URL? = { fileManager.urls(for: .documentDirectory, in: .userDomainMask).first }()
     
     //create
-    static func createFileInDocumentDirectory(filePath: String, content: Data) -> Bool {
+    static func createFileWithData(filePath: String, content: Data) -> Bool {
         guard let fileURL = documentDirectory?.appending(path: filePath) else { return false }
         return fileManager.createFile(atPath: fileURL.planePath, contents: content)
+    }
+    
+    static func createFileWithString(filePath: String, content: String) -> Bool {
+        guard let fileURL = documentDirectory?.appending(path: filePath) else { return false }
+        guard let data = content.data(using: .utf8) else { return false }
+        return fileManager.createFile(atPath: fileURL.planePath, contents: data)
     }
     
     static func createDirectoryInDocumentDirectory(folderPath: String) -> Bool {
@@ -31,6 +37,10 @@ class FileService {
     }
     
     //check
+    static func isExistFile(filePath: String) -> Bool {
+        fileManager.fileExists(atPath: filePath)
+    }
+    
     static func isExistFileInDocumentDirectory(filePath: String) -> Bool {
         guard let fileURL = documentDirectory?.appending(path: filePath) else { return false }
         return fileManager.fileExists(atPath: fileURL.planePath)
@@ -66,6 +76,11 @@ class FileService {
     static func getFileData(filePath: String) throws -> Data? {
         guard let fileURL = documentDirectory?.appendingPathComponent(filePath) else { return nil }
         return try Data(contentsOf: fileURL)
+    }
+    
+    static func getFileString(filePath: String) throws -> String? {
+        guard let fileData = try? getFileData(filePath: filePath) else { return nil }
+        return String(data: fileData, encoding: .utf8)
     }
     
     static func getAllFilePaths(readFolder: ReadFolder) -> [String] {
@@ -127,6 +142,18 @@ class FileService {
         do {
             guard let fileURL = documentDirectory?.appending(path: filePath) else { return false }
             try content.write(to: fileURL, options: .atomic)
+            return true
+        } catch {
+            print(error)
+            return false
+        }
+    }
+    
+    static func updateFileWithString(filePath: String, content: String) -> Bool {
+        do {
+            guard let fileURL = documentDirectory?.appending(path: filePath) else { return false }
+            let data = content.data(using: .utf8)
+            try data?.write(to: fileURL, options: .atomic)
             return true
         } catch {
             print(error)

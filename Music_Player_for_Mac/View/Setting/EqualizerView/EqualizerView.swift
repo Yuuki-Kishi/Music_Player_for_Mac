@@ -53,7 +53,7 @@ struct EqualizerView: View {
         for equalizerParameter in equalizerParameters {
             await EqualizerParameterRepository.update(equalizerParameter: equalizerParameter)
         }
-        playDataStore.setEqualizer(equalizerParameters: equalizerParameters)
+        PlayRepository.setEqualizer(equalizerParameters: equalizerParameters)
     }
     func onAppear() async {
         let equalizerParameters = await EqualizerParameterRepository.read()

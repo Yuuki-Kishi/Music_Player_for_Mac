@@ -65,8 +65,9 @@ struct Music: Hashable, Identifiable, Equatable {
 }
 
 extension Music {
-    var fullPath: String {
-        self.readFolder.folderPath + "/" + self.filePath
+    var fullPath: String? {
+        guard let bookmarkDataURL = self.readFolder.bookmarkDataURL else { return nil }
+        return bookmarkDataURL.planePath + self.filePath
     }
 }
 

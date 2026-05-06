@@ -21,8 +21,8 @@ struct PlayControlView: View {
             .padding(10)
             Image(systemName: speakerIconString())
                 .frame(width: 20)
-            Slider(value: $playDataStore.masterVolume, in: 0 ... 1) {
-                
+            Slider(value: $playDataStore.masterVolume, in: 0 ... 1) { isEditing in
+                PlayRepository.setVolume()
             }
             .sliderThumbVisibility(.hidden)
             .frame(width: 70)

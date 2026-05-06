@@ -29,7 +29,7 @@ struct ButtonsView: View {
             .buttonStyle(.plain)
             .padding(.vertical)
             Button(action: {
-                
+                playButtonAction()
             }) {
                 Image(systemName: playIconString())
                     .font(.system(size: 30))
@@ -55,6 +55,13 @@ struct ButtonsView: View {
             return "repeat"
         case .sameRepeat:
             return "repeat.1"
+        }
+    }
+    func playButtonAction() {
+        if playDataStore.isPlaying {
+            PlayRepository.pause()
+        } else {
+            PlayRepository.play()
         }
     }
     func playIconString() -> String {

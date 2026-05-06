@@ -10,17 +10,17 @@ import Foundation
 @MainActor
 class PlayFlowRepository {
     static let playNextFilePath: String = "System/PlayNext.m3u8"
+    static let playNextMetaInfo: String = "#EXTM3U\n" + "#PlayNext"
     static let playBackFilePath: String = "System/PlayBack.m3u8"
+    static let playBackMetaInfo: String = "#EXTM3U\n" + "#PlayBack"
     
     //create
     static func createPlayNextM3U8() -> Bool {
-        let content = "#EXTM3U\n" + "#PlayNext\n"
-        return FileService.createFileWithString(filePath: playNextFilePath, content: content)
+        FileService.createFileWithString(filePath: playNextFilePath, content: playNextMetaInfo)
     }
     
     static func createPlayBackM3U8() -> Bool {
-        let content = "#EXTM3U\n" + "#PlayBack\n"
-        return FileService.createFileWithString(filePath: playBackFilePath, content: content)
+        FileService.createFileWithString(filePath: playBackFilePath, content: playBackMetaInfo)
     }
     
     //check
@@ -35,8 +35,10 @@ class PlayFlowRepository {
     //get
     static func getPlayNextM3U8() -> [String]? {
         do {
-            guard let content = try FileService.getFileString(filePath: playNextFilePath) else { return nil }
-            return content.components(separatedBy: "\n")
+            guard let M3U8Text = try FileService.getFileString(filePath: playNextFilePath) else { return nil }
+            var content = M3U8Text.components(separatedBy: "\n")
+            content.removeFirst(2)
+            return content
         } catch {
             print(error)
             return nil
@@ -50,58 +52,75 @@ class PlayFlowRepository {
     
     static func getPlayBackM3U8() -> [String]? {
         do {
-            guard let content = try FileService.getFileString(filePath: playBackFilePath) else { return nil }
-            return content.components(separatedBy: "\n")
+            guard let M3U8Text = try FileService.getFileString(filePath: playBackFilePath) else { return nil }
+            var content = M3U8Text.components(separatedBy: "\n")
+            content.removeFirst(2)
+            return content
         } catch {
             print(error)
             return nil
         }
     }
     
+    static func getLastMusicFilePath() -> String? {
+        guard let playBackM3U8 = getPlayBackM3U8() else { return nil }
+        return playBackM3U8.last
+    }
+    
     //update
-    static func addPlayNextM3U8(filePath: String) -> Bool {
-        guard var previousContent = getPlayNextM3U8() else { return false }
-        previousContent.append(noDuplicate: filePath)
-        let content = previousContent.joined(separator: "\n")
-        return FileService.updateFileWithString(filePath: playNextFilePath, content: content)
+    static func addPlayNextM3U8(filePath: String, at: Int) -> Bool {
+        guard let at = getPlayNextM3U8()?.count else { return false }
+        return insertPlayNextM3U8(filePath: filePath, at: at)
     }
     
     static func addPlayBackM3U8(filePath: String) -> Bool {
+        guard let at = getPlayBackM3U8()?.count else { return false }
+        return insertPlayBackM3U8(filePath: filePath, at: at)
+    }
+    
+    static func insertPlayNextM3U8(filePath: String, at: Int) -> Bool {
+        guard var previousContent = getPlayNextM3U8() else { return false }
+        previousContent.insert(filePath, at: at)
+        let content = playNextMetaInfo + "\n" + previousContent.joined(separator: "\n")
+        return FileService.updateFileWithString(filePath: playNextFilePath, content: content)
+    }
+    
+    static func insertPlayBackM3U8(filePath: String, at: Int) -> Bool {
         guard var previousContent = getPlayBackM3U8() else { return false }
-        previousContent.append(noDuplicate: filePath)
-        let content = previousContent.joined(separator: "\n")
+        previousContent.insert(filePath, at: at)
+        let content = playBackMetaInfo + "\n" + previousContent.joined(separator: "\n")
         return FileService.updateFileWithString(filePath: playBackFilePath, content: content)
     }
     
     static func writePlayNextM3U8(filePaths: [String]) -> Bool {
-        let content = filePaths.joined(separator: "\n")
+        let content = playNextMetaInfo + "\n" + filePaths.joined(separator: "\n")
         return FileService.updateFileWithString(filePath: playNextFilePath, content: content)
     }
     
     static func writePlayBackM3U8(filePaths: [String]) -> Bool {
-        let content = filePaths.joined(separator: "\n")
+        let content = playBackMetaInfo + "\n" + filePaths.joined(separator: "\n")
         return FileService.updateFileWithString(filePath: playBackFilePath, content: content)
     }
     
     static func removePlayNextM3U8(filePath: String) -> Bool {
         guard var previousContent = getPlayNextM3U8() else { return false }
         previousContent.remove(string: filePath)
-        let content = previousContent.joined(separator: "\n")
+        let content = playNextMetaInfo + "\n" + previousContent.joined(separator: "\n")
         return FileService.updateFileWithString(filePath: playNextFilePath, content: content)
     }
     
     static func removePlayBackM3U8(filePath: String) -> Bool {
         guard var previousContent = getPlayBackM3U8() else { return false }
         previousContent.remove(string: filePath)
-        let content = previousContent.joined(separator: "\n")
+        let content = playBackMetaInfo + "\n" + previousContent.joined(separator: "\n")
         return FileService.updateFileWithString(filePath: playBackFilePath, content: content)
     }
     
     static func cleanUpPlayNextM3U8() -> Bool {
-        FileService.updateFileWithString(filePath: playNextFilePath, content: "")
+        FileService.updateFileWithString(filePath: playNextFilePath, content: playNextMetaInfo)
     }
     
     static func cleanUpPlayBackM3U8() -> Bool {
-        FileService.updateFileWithString(filePath: playBackFilePath, content: "")
+        FileService.updateFileWithString(filePath: playBackFilePath, content: playBackMetaInfo)
     }
 }

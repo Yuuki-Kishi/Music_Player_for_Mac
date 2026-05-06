@@ -18,9 +18,8 @@ class MusicRepository {
     //check
     
     //get
-    static func getMusic(filePath: String, readFolder: ReadFolder) async -> Music? {
+    static func getMusic(filePath: String, bookmarkDataURL: URL) async -> Music? {
         do {
-            guard let bookmarkDataURL = readFolder.bookmarkDataURL else { return nil }
             let fileURL = bookmarkDataURL.appending(path: filePath)
             guard bookmarkDataURL.startAccessingSecurityScopedResource() else { return nil }
             defer { bookmarkDataURL.stopAccessingSecurityScopedResource() }
@@ -30,7 +29,6 @@ class MusicRepository {
             let artistName = try await metadata.first(where: { $0.commonKey == .commonKeyArtist })?.load(.stringValue)
             let albumName = try await metadata.first(where: { $0.commonKey == .commonKeyAlbumName })?.load(.stringValue)
             let coverImage = try await metadata.first(where: { $0.commonKey == .commonKeyArtwork })?.load(.dataValue)
-            let folderPath = URL(filePath: filePath).deletingLastPathComponent().planePath
             guard let attributes = FileService.getFileAttributes(filePath: fileURL.planePath) else { return nil }
             guard let editedDate = attributes[FileAttributeKey.modificationDate] as? Date else { return nil }
             guard let bytes = attributes[.size] as? Int64 else { return nil }
@@ -39,7 +37,7 @@ class MusicRepository {
             byteCountFormatter.countStyle = .file
             let fileSize = byteCountFormatter.string(fromByteCount: bytes)
             let musicLength = try await CMTimeGetSeconds(asset.load(.duration))
-            let music = Music(musicName: musicName, artistName: artistName, albumName: albumName, coverImage: coverImage, editedDate: editedDate, fileSize: fileSize, musicLength: musicLength, parentFolderPath: folderPath, readFolder: readFolder, filePath: filePath)
+            let music = Music(musicName: musicName, artistName: artistName, albumName: albumName, coverImage: coverImage, editedDate: editedDate, fileSize: fileSize, musicLength: musicLength, bookmarkDataURL: bookmarkDataURL, filePath: filePath)
             return music
         } catch {
             print(error)
@@ -47,11 +45,11 @@ class MusicRepository {
         }
     }
     
-    static func getMusics(readFolder: ReadFolder) async -> [Music] {
+    static func getMusics(bookmarkDataURL: URL) async -> [Music] {
         var musics: [Music] = []
-        let filePaths = FileService.getAllFilePaths(readFolder: readFolder)
+        let filePaths = FileService.getAllFilePaths(bookmarkDataURL: bookmarkDataURL)
         for filePath in filePaths {
-            guard let music = await getMusic(filePath: filePath, readFolder: readFolder) else { continue }
+            guard let music = await getMusic(filePath: filePath, bookmarkDataURL: bookmarkDataURL) else { continue }
             musics.append(noDuplicate: music)
         }
         return musics
@@ -60,7 +58,8 @@ class MusicRepository {
     static func loadMusics() async {
         for readFolder in readFolderDataStore.readFolderList {
             if !readFolder.isRead { continue }
-            let musics = await getMusics(readFolder: readFolder)
+            guard let bookmarkDataURL = readFolder.bookmarkDataURL else { continue }
+            let musics = await getMusics(bookmarkDataURL: bookmarkDataURL)
             musicDataStore.musicList = musicDataStore.musicList + musics
         }
     }

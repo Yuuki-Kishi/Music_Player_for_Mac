@@ -8,9 +8,6 @@
 import Foundation
 
 struct ReadFolder: Codable, Hashable, Identifiable, Equatable {
-//    static func == (lhs: ReadFolder, rhs: ReadFolder) -> Bool {
-//        lhs.folderPath == rhs.folderPath
-//    }
     
     var id = UUID()
     var isRead: Bool
@@ -69,14 +66,6 @@ extension Array where Element == ReadFolder {
         } else {
             self.append(item)
         }
-    }
-    func get(fullPath: String) -> Element? {
-        let fileURL = URL(fileURLWithPath: fullPath).standardizedFileURL
-        return self.filter { folder in
-            let folderURL = URL(fileURLWithPath: folder.folderPath).standardizedFileURL
-            return fileURL.path.hasPrefix(folderURL.path + "/") || fileURL.path == folderURL.path
-        }
-        .max { $0.folderPath.count < $1.folderPath.count }
     }
     mutating func remove(readFolder: Element) {
         if let index = self.firstIndex(where: { $0.folderPath == readFolder.folderPath }) {

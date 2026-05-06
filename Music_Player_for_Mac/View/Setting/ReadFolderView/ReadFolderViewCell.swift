@@ -43,7 +43,8 @@ struct ReadFolderViewCell: View {
         }
     }
     func musicCount() -> String {
-        let musicCount = FileService.getFileCount(readFolder: readFolder)
+        guard let bookmarkDataURL = readFolder.bookmarkDataURL else { return "0曲" }
+        let musicCount = FileService.getFileCount(bookmarkDataURL: bookmarkDataURL)
         return String(musicCount) + "曲"
     }
 }

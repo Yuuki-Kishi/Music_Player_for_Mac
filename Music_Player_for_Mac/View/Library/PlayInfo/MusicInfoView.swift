@@ -28,6 +28,17 @@ struct MusicInfoView: View {
                 }
                 musicMenu()
             }
+            HStack {
+                Text(secondToTime(second: playDataStore.seekPosition))
+                    .foregroundStyle(.secondary)
+                    .font(.system(size: 10))
+                    .padding(.horizontal, 5)
+                Spacer()
+                Text(secondToTime(second: playDataStore.playingMusic?.musicLength ?? 0))
+                    .foregroundStyle(.secondary)
+                    .font(.system(size: 10))
+                    .padding(.horizontal, 5)
+            }
             Slider(value: $playDataStore.seekPosition, in: 0 ... (playDataStore.playingMusic?.musicLength ?? 300)) { isEditing in
                 playDataStore.isEditingSeekPosition = isEditing
                 if !isEditing {
@@ -67,6 +78,10 @@ struct MusicInfoView: View {
         .menuIndicator(.hidden)
         .buttonStyle(.plain)
         .padding(.horizontal)
+    }
+    func secondToTime(second: TimeInterval) -> String {
+        let second = Int(second)
+        return String(format: "%02d:%02d:%02d", second / 3600, (second % 3600) / 60, (second % 3600) % 60)
     }
 }
 

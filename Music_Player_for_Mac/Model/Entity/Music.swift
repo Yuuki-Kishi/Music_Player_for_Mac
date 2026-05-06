@@ -20,11 +20,10 @@ struct Music: Hashable, Identifiable, Equatable {
     var editedDate: Date
     var fileSize: String
     var musicLength: TimeInterval
-    var parentFolderPath: String
-    var readFolder: ReadFolder
+    var bookmarkDataURL: URL
     var filePath: String
     
-    init(musicName: String, artistName: String, albumName: String, coverImage: Data, editedDate: Date, fileSize: String, musicLength: TimeInterval, parentFolderPath: String, readFolder: ReadFolder, filePath: String) {
+    init(musicName: String, artistName: String, albumName: String, coverImage: Data, editedDate: Date, fileSize: String, musicLength: TimeInterval, bookmarkDataURL: URL, filePath: String) {
         self.musicName = musicName
         self.artistName = artistName
         self.albumName = albumName
@@ -32,12 +31,11 @@ struct Music: Hashable, Identifiable, Equatable {
         self.editedDate = editedDate
         self.fileSize = fileSize
         self.musicLength = musicLength
-        self.parentFolderPath = parentFolderPath
-        self.readFolder = readFolder
+        self.bookmarkDataURL = bookmarkDataURL
         self.filePath = filePath
     }
     
-    init(musicName: String?, artistName: String?, albumName: String?, coverImage: Data?, editedDate: Date?, fileSize: String?, musicLength: TimeInterval?, parentFolderPath: String?, readFolder: ReadFolder?, filePath: String?) {
+    init(musicName: String?, artistName: String?, albumName: String?, coverImage: Data?, editedDate: Date?, fileSize: String?, musicLength: TimeInterval?, bookmarkDataURL: URL?, filePath: String?) {
         self.musicName = musicName ?? "不明な曲"
         self.artistName = artistName ?? "不明なアーティスト"
         self.albumName = albumName ?? "不明なアルバム"
@@ -45,8 +43,7 @@ struct Music: Hashable, Identifiable, Equatable {
         self.editedDate = editedDate ?? Date()
         self.fileSize = fileSize ?? "0MB"
         self.musicLength = musicLength ?? 0.0
-        self.parentFolderPath = parentFolderPath ?? "unknownParentFolderPath"
-        self.readFolder = readFolder ?? ReadFolder()
+        self.bookmarkDataURL = bookmarkDataURL ?? URL(filePath: "unknownfolderPath")
         self.filePath = filePath ?? "unknownFilePath"
     }
     
@@ -58,16 +55,14 @@ struct Music: Hashable, Identifiable, Equatable {
         self.editedDate = Date()
         self.fileSize = "0MB"
         self.musicLength = 0.0
-        self.parentFolderPath = "unknownParentFolderPath"
-        self.readFolder = ReadFolder()
+        self.bookmarkDataURL = URL(filePath: "unknownfolderPath")
         self.filePath = "unknownFilePath"
     }
 }
 
 extension Music {
-    var fullPath: String? {
-        guard let bookmarkDataURL = self.readFolder.bookmarkDataURL else { return nil }
-        return bookmarkDataURL.planePath + self.filePath
+    var fullPath: String {
+        self.bookmarkDataURL.appending(path: self.filePath).planePath
     }
 }
 
@@ -77,6 +72,11 @@ extension Array where Element == Music {
             self[index] = item
         } else {
             self.append(item)
+        }
+    }
+    mutating func remove(music: Element) {
+        if let index = self.firstIndex(of: music) {
+            self.remove(at: index)
         }
     }
 }

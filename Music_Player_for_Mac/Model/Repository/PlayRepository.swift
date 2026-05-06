@@ -20,11 +20,11 @@ class PlayRepository {
     static func setScheduleFile() {
         //currentItem.itemはMPMediaItemクラス
         do {
-            guard let bookmarkDataURL = playDataStore.playingMusic?.readFolder.bookmarkDataURL else { return }
+            guard let bookmarkDataURL = playDataStore.playingMusic?.bookmarkDataURL else { return }
             guard bookmarkDataURL.startAccessingSecurityScopedResource() else { return }
             defer { bookmarkDataURL.stopAccessingSecurityScopedResource() }
-            guard let fullPath = playDataStore.playingMusic?.fullPath else { return }
-            let fileURL = URL(fileURLWithPath: fullPath)
+            guard let filePath = playDataStore.playingMusic?.fullPath else { return }
+            let fileURL = URL(fileURLWithPath: filePath)
             // Source fileを取得する
             let audioFile = try AVAudioFile(forReading: fileURL)
             // PlayerNodeからAudioEngineのoutput先であるmainMixerNodeへ接続する
@@ -33,10 +33,8 @@ class PlayRepository {
             playDataStore.audioEngine.mainMixerNode.outputVolume = playDataStore.masterVolume * 2
             // 再生準備
             playDataStore.playerNode.scheduleFile(audioFile, at: nil, completionCallbackType: .dataRendered)
-        }
-        catch let error {
+        } catch {
             print(error.localizedDescription)
-            return
         }
     }
     
@@ -123,14 +121,13 @@ class PlayRepository {
         switch playDataStore.playMode {
         case .shuffle:
             Task {
-                guard let playingMusicFilePath = playDataStore.playingMusic?.fullPath else { return }
-                guard PlayFlowRepository.addPlayBackM3U8(filePath: playingMusicFilePath) else { return }
-                print("addSucceeded")
-                if let nextMusicFilePath = PlayFlowRepository.getNextMusicFilePath() {
-                    guard PlayFlowRepository.removePlayNextM3U8(filePath: nextMusicFilePath) else { return }
-                    print("removeSucceeded")
-                    guard let readFolder = readFolderDataStore.readFolderList.get(fullPath: nextMusicFilePath) else { return }
-                    guard let nextMusic = await MusicRepository.getMusic(filePath: nextMusicFilePath, readFolder: readFolder) else { return }
+                guard let fullPath = playDataStore.playingMusic?.fullPath else { return }
+                guard PlayFlowRepository.addPlayBackM3U8(filePath: fullPath) else { return }
+                if let nextFullPath = PlayFlowRepository.getNextMusicFilePath() {
+                    guard PlayFlowRepository.removePlayNextM3U8(filePath: nextFullPath) else { return }
+                    guard let bookmarkDataURL = nextFullPath.bookmarkDataURL else { return }
+                    guard let filePath = nextFullPath.filePath else { return }
+                    guard let nextMusic = await MusicRepository.getMusic(filePath: filePath, bookmarkDataURL: bookmarkDataURL) else { return }
                     musicChoosed(music: nextMusic, playGroup: playDataStore.playGroup)
                 } else {
                     playDataStore.seekPosition = 0.0
@@ -139,14 +136,13 @@ class PlayRepository {
             }
         case .order:
             Task {
-                guard let playingMusicFilePath = playDataStore.playingMusic?.fullPath else { return }
-                guard PlayFlowRepository.addPlayBackM3U8(filePath: playingMusicFilePath) else { return }
-                print("addSucceeded")
-                if let nextMusicFilePath = PlayFlowRepository.getNextMusicFilePath() {
-                    guard PlayFlowRepository.removePlayNextM3U8(filePath: nextMusicFilePath) else { return }
-                    print("removeSucceeded")
-                    guard let readFolder = readFolderDataStore.readFolderList.get(fullPath: nextMusicFilePath) else { return }
-                    guard let nextMusic = await MusicRepository.getMusic(filePath: nextMusicFilePath, readFolder: readFolder) else { return }
+                guard let fullPath = playDataStore.playingMusic?.fullPath else { return }
+                guard PlayFlowRepository.addPlayBackM3U8(filePath: fullPath) else { return }
+                if let nextFullPath = PlayFlowRepository.getNextMusicFilePath() {
+                    guard PlayFlowRepository.removePlayNextM3U8(filePath: nextFullPath) else { return }
+                    guard let bookmarkDataURL = nextFullPath.bookmarkDataURL else { return }
+                    guard let filePath = nextFullPath.filePath else { return }
+                    guard let nextMusic = await MusicRepository.getMusic(filePath: filePath, bookmarkDataURL: bookmarkDataURL) else { return }
                     musicChoosed(music: nextMusic, playGroup: playDataStore.playGroup)
                 } else {
                     playDataStore.seekPosition = 0.0
@@ -201,7 +197,7 @@ class PlayRepository {
 //    }
     
     static func setSeek() {
-        guard let bookmarkDataURL = playDataStore.playingMusic?.readFolder.bookmarkDataURL else { return }
+        guard let bookmarkDataURL = playDataStore.playingMusic?.bookmarkDataURL else { return }
         guard bookmarkDataURL.startAccessingSecurityScopedResource() else { return }
         defer { bookmarkDataURL.stopAccessingSecurityScopedResource() }
         guard let audioFile = try? AVAudioFile(forReading: bookmarkDataURL) else { return }
@@ -245,9 +241,12 @@ class PlayRepository {
         }
     }
     
+    static func setVolume() {
+        playDataStore.audioEngine.mainMixerNode.outputVolume = playDataStore.masterVolume * 2
+    }
+    
     static func musicChoosed(music: Music, playGroup: PlayDataStore.PlayGroup) {
-        guard let filePath = music.fullPath else { return }
-        if FileService.isExistFile(filePath: filePath) {
+        if FileService.isExistFile(filePath: music.fullPath) {
             playDataStore.playGroup = playGroup
             setMusic(music: music)
             //            UserDefaultsRepository.savePlayingMusicFilePath(filePath: music.filePath)

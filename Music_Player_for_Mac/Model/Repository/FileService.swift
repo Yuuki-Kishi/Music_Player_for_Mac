@@ -83,8 +83,7 @@ class FileService {
         return String(data: fileData, encoding: .utf8)
     }
     
-    static func getAllFilePaths(readFolder: ReadFolder) -> [String] {
-        guard let bookmarkDataURL = readFolder.bookmarkDataURL else { return [] }
+    static func getAllFilePaths(bookmarkDataURL: URL) -> [String] {
         guard bookmarkDataURL.startAccessingSecurityScopedResource() else { return [] }
         defer { bookmarkDataURL.stopAccessingSecurityScopedResource() }
         let fileURLs = fileManager.enumerator(at: bookmarkDataURL, includingPropertiesForKeys: [])
@@ -119,8 +118,8 @@ class FileService {
         }
     }
     
-    static func getFileCount(readFolder: ReadFolder) -> Int {
-        getAllFilePaths(readFolder: readFolder).count
+    static func getFileCount(bookmarkDataURL: URL) -> Int {
+        getAllFilePaths(bookmarkDataURL: bookmarkDataURL).count
     }
     
 //    static func getFolderPath(filePath: String) -> String {

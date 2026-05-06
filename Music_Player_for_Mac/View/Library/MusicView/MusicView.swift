@@ -41,7 +41,7 @@ struct MusicView: View {
             .contextMenu(forSelectionType: Music.ID.self, menu: { _ in }) { musics in
                 guard let music = musicDataStore.musicList.first(where: { $0.id == musics.first }) else { return }
                 PlayRepository.musicChoosed(music: music, playGroup: .music)
-                let filePaths = musicDataStore.musicList.compactMap { $0.fullPath }
+                let filePaths = musicDataStore.musicList.map { $0.fullPath }
                 PlayRepository.setNextMusics(fullPaths: filePaths)
             }
             PlayInfoView(playDataStore: playDataStore)

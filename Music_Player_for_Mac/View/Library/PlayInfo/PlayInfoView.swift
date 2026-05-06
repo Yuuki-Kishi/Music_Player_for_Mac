@@ -14,7 +14,7 @@ struct PlayInfoView: View {
         ZStack {
             RoundedRectangle(cornerRadius: 15)
                 .fill(Color.primary.opacity(0.05))
-                .frame(height: 65)
+                .frame(height: 80)
             HStack {
                 ButtonsView(playDataStore: playDataStore)
                 MusicInfoView(playDataStore: playDataStore)
